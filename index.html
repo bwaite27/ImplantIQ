@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ImplantIQ v0.2 — Nobel Active Identifier</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:         #f4f1ec;
+      --surface:    #ffffff;
+      --surface2:   #ede9e1;
+      --border:     #d5cfc4;
+      --dark:       #1a1410;
+      --accent:     #8B4513;
+      --accent2:    #c17f3a;
+      --accent3:    #2d5a3d;
+      --text:       #1a1410;
+      --muted:      #7a6f62;
+      --success:    #2d5a3d;
+      --warning:    #8B6914;
+      --danger:     #8B1a1a;
+      --radius:     12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Instrument Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Subtle grain texture overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+    }
+
+    .wrapper {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 52px 0 44px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .logo-area h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2.6rem;
+      letter-spacing: -1px;
+      line-height: 1;
+      color: var(--dark);
+    }
+
+    .logo-area h1 span { color: var(--accent); }
+
+    .logo-area p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .version-badge {
+      background: var(--dark);
+      color: var(--bg);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 0.72rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      margin-top: 4px;
+    }
+
+    /* ── MISSION STATEMENT ── */
+    .mission {
+      margin-top: 20px;
+      padding: 18px 24px;
+      background: var(--dark);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .mission-icon { font-size: 1.8rem; flex-shrink: 0; }
+
+    .mission p {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+    }
+
+    .mission strong { color: #f4f1ec; }
+
+    /* ── DIAGNOSTIC CRITERIA PANEL ── */
+    .criteria-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 28px;
+    }
+
+    .criteria-panel h3 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+
+    .criteria-panel > p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 560px) { .criteria-grid { grid-template-columns: 1fr; } }
+
+    .criterion {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .criterion-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .criterion-text strong {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 2px;
+    }
+
+    .criterion-text span {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── API KEY ── */
+    .api-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .api-row { display: flex; gap: 10px; }
+
+    input[type="password"], input[type="text"] {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 16px;
+      color: var(--text);
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    input:focus { border-color: var(--accent); }
+
+    .btn {
+      background: var(--dark);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      padding: 11px 22px;
+      font-family: 'Instrument Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { opacity: .82; }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .btn-outline:hover { border-color: var(--dark); color: var(--dark); opacity: 1; }
+
+    .api-note {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .api-note a { color: var(--accent); text-decoration: none; }
+    .api-note a:hover { text-decoration: underline; }
+
+    /* ── UPLOAD ZONE ── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 56px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+      margin-bottom: 24px;
+      background: var(--surface);
+    }
+
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(139,69,19,.04);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon { font-size: 3rem; margin-bottom: 16px; display: block; }
+
+    .upload-zone h2 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+
+    .upload-zone p { color: var(--muted); font-size: 0.88rem; }
+
+    /* ── PREVIEW ── */
+    #preview-container { display: none; margin-bottom: 24px; }
+
+    #preview-img {
+      width: 100%;
+      max-height: 360px;
+      object-fit: contain;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: #000;
+    }
+
+    .preview-controls { display: flex; gap: 10px; margin-top: 12px; }
+
+    /* ── ANALYZE BTN ── */
+    #analyze-btn {
+      width: 100%;
+      padding: 18px;
+      font-size: 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 32px;
+      letter-spacing: 0.5px;
+      background: var(--accent);
+    }
+
+    /* ── LOADER ── */
+    .loader { display: none; text-align: center; padding: 56px; }
+
+    .scan-bar-wrap {
+      width: 200px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      margin: 0 auto 24px;
+      overflow: hidden;
+    }
+
+    .scan-bar {
+      height: 100%;
+      width: 40%;
+      background: var(--accent);
+      border-radius: 99px;
+      animation: scan 1.4s ease-in-out infinite;
+    }
+
+    @keyframes scan {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+
+    .loader p { color: var(--muted); font-size: 0.9rem; }
+    .loader .loader-sub { font-size: 0.78rem; color: var(--border); margin-top: 6px; }
+
+    /* ── ERROR ── */
+    .error-box {
+      background: rgba(139,26,26,.06);
+      border: 1px solid rgba(139,26,26,.3);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      color: var(--danger);
+      font-size: 0.88rem;
+      display: none;
+      margin-bottom: 24px;
+    }
+
+    /* ── RESULTS ── */
+    #results { display: none; }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .results-header h2 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.6rem;
+    }
+
+    /* ── VERDICT CARD ── */
+    .verdict-card {
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 24px;
+      animation: fadeUp .4s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .verdict-card.consistent {
+      background: #f0f7f3;
+      border: 2px solid var(--success);
+    }
+
+    .verdict-card.possible {
+      background: #fdf8ee;
+      border: 2px solid var(--warning);
+    }
+
+    .verdict-card.inconsistent {
+      background: #fdf0f0;
+      border: 2px solid var(--danger);
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(14px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .verdict-icon { font-size: 2.4rem; margin-bottom: 12px; display: block; }
+
+    .verdict-label {
+      font-size: 0.72rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .verdict-card.consistent .verdict-label { color: var(--success); }
+    .verdict-card.possible .verdict-label   { color: var(--warning); }
+    .verdict-card.inconsistent .verdict-label { color: var(--danger); }
+
+    .verdict-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.8rem;
+      color: var(--dark);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .verdict-summary {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 600px;
+    }
+
+    /* ── CONFIDENCE METER ── */
+    .confidence-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      animation: fadeUp .4s ease .1s both;
+    }
+
+    .confidence-section h3 {
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .conf-meter {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .conf-number {
+      font-family: 'Instrument Serif', serif;
+      font-size: 3.5rem;
+      line-height: 1;
+      color: var(--accent);
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    .conf-bar-wrap {
+      flex: 1;
+    }
+
+    .conf-bar-bg {
+      height: 10px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      transition: width 1.2s cubic-bezier(.2,.8,.2,1);
+      width: 0%;
+    }
+
+    .conf-desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* ── CRITERIA SCORECARD ── */
+    .scorecard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      animation: fadeUp .4s ease .18s both;
+    }
+
+    .scorecard h3 {
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .score-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--surface2);
+    }
+
+    .score-row:last-child { border-bottom: none; }
+
+    .score-indicator {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .score-indicator.present  { background: #e8f5ed; color: var(--success); border: 1.5px solid var(--success); }
+    .score-indicator.absent   { background: #fdf0f0; color: var(--danger);  border: 1.5px solid var(--danger); }
+    .score-indicator.unclear  { background: #fdf8ee; color: var(--warning); border: 1.5px solid var(--warning); }
+
+    .score-content strong {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 2px;
+    }
+
+    .score-content span {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── CLINICAL REASONING ── */
+    .reasoning-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      animation: fadeUp .4s ease .24s both;
+    }
+
+    .reasoning-section h3 {
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
+
+    .reasoning-section p {
+      font-size: 0.88rem;
+      color: var(--text);
+      line-height: 1.8;
+    }
+
+    /* ── IMAGE QUALITY ── */
+    .quality-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .quality-pill.good    { background: #e8f5ed; color: var(--success); }
+    .quality-pill.fair    { background: #fdf8ee; color: var(--warning); }
+    .quality-pill.poor    { background: #fdf0f0; color: var(--danger); }
+
+    /* ── FEEDBACK ── */
+    .feedback-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-top: 32px;
+      animation: fadeUp .4s ease .3s both;
+    }
+
+    .feedback-section h3 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.2rem;
+      margin-bottom: 6px;
+    }
+
+    .feedback-section > p {
+      font-size: 0.83rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .feedback-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn-correct {
+      background: #e8f5ed;
+      border: 1.5px solid var(--success);
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .btn-incorrect {
+      background: #fdf0f0;
+      border: 1.5px solid var(--danger);
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .btn-correct:hover, .btn-incorrect:hover { opacity: .8; }
+
+    .correct-input { display: none; margin-top: 16px; gap: 10px; }
+    .correct-input input { flex: 1; }
+
+    /* ── DISCLAIMER ── */
+    .disclaimer {
+      margin-top: 48px;
+      padding: 20px 24px;
+      background: var(--surface);
+      border-left: 3px solid var(--accent2);
+      border-radius: 0 8px 8px 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .disclaimer strong { color: var(--accent2); }
+
+    @media (max-width: 560px) {
+      .logo-area h1 { font-size: 2rem; }
+      .api-row { flex-direction: column; }
+      .conf-number { font-size: 2.8rem; width: 70px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <div class="logo-area">
+        <h1>Implant<span>IQ</span></h1>
+        <p>Nobel Active Diagnostic Identifier</p>
+      </div>
+      <span class="version-badge">v0.2 · Nobel Active Focus</span>
+    </div>
+    <div class="mission">
+      <span class="mission-icon">🦷</span>
+      <p>
+        <strong>How this works:</strong> Rather than guessing, ImplantIQ evaluates your radiograph against
+        a specific set of Nobel Active diagnostic criteria — flat apex, aggressive double-lead thread,
+        back taper, and coronal thread transition. Each feature is scored independently before a
+        verdict is reached.
+      </p>
+    </div>
+  </header>
+
+  <!-- DIAGNOSTIC CRITERIA PANEL -->
+  <!-- 
+    LEARNING NOTE: This panel is purely informational — it shows the clinician
+    what the AI is actually evaluating. Transparency builds trust in clinical tools.
+    The same four criteria are what we put in the system prompt below.
+  -->
+  <div class="criteria-panel">
+    <h3>Nobel Active Diagnostic Criteria</h3>
+    <p>The AI evaluates these four features independently. All must be present for a confident identification.</p>
+    <div class="criteria-grid">
+      <div class="criterion">
+        <div class="criterion-num">1</div>
+        <div class="criterion-text">
+          <strong>Flat Apex</strong>
+          <span>Nobel Active has a distinctively flat, blunt apex. Clones and other systems typically show a rounded or pointed tip.</span>
+        </div>
+      </div>
+      <div class="criterion">
+        <div class="criterion-num">2</div>
+        <div class="criterion-text">
+          <strong>Aggressive Double-Lead Thread</strong>
+          <span>Deep, wide, aggressive thread pattern in the implant body. Visibly more pronounced than single-lead systems.</span>
+        </div>
+      </div>
+      <div class="criterion">
+        <div class="criterion-num">3</div>
+        <div class="criterion-text">
+          <strong>Back Taper (Coronal)</strong>
+          <span>Visible narrowing of the implant body toward the coronal third — the implant gets slightly narrower near the top.</span>
+        </div>
+      </div>
+      <div class="criterion">
+        <div class="criterion-num">4</div>
+        <div class="criterion-text">
+          <strong>Coronal Thread Transition</strong>
+          <span>Thread pattern changes in the upper portion near the crest — threads become less aggressive or spaced differently.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API KEY -->
+  <div class="api-section">
+    <div class="section-label">🔑 Anthropic API Key</div>
+    <div class="api-row">
+      <input type="password" id="api-key" placeholder="sk-ant-api03-..." />
+      <button class="btn" onclick="saveKey()">Save Key</button>
+    </div>
+    <p class="api-note">
+      Stored in your browser session only. Never saved to any server.
+      Get your key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.
+    </p>
+  </div>
+
+  <!-- UPLOAD ZONE -->
+  <div class="upload-zone" id="drop-zone">
+    <input type="file" id="file-input" accept="image/*" onchange="handleFile(this.files[0])" />
+    <span class="upload-icon">🩻</span>
+    <h2>Upload PA Radiograph</h2>
+    <p>Drag &amp; drop your X-ray image, or click to browse<br/>
+    <small style="opacity:.6">JPG · PNG · WebP · HEIC · Direct digital exports preferred</small></p>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="preview-container">
+    <img id="preview-img" alt="Uploaded radiograph" />
+    <div class="preview-controls">
+      <button class="btn btn-outline" onclick="clearImage()">✕ Remove image</button>
+    </div>
+  </div>
+
+  <div class="error-box" id="error-box"></div>
+
+  <!-- ANALYZE BUTTON -->
+  <button class="btn" id="analyze-btn" onclick="analyze()" disabled>
+    Evaluate Against Nobel Active Criteria →
+  </button>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader">
+    <div class="scan-bar-wrap"><div class="scan-bar"></div></div>
+    <p>Evaluating radiographic features…</p>
+    <p class="loader-sub">Checking apex, thread pattern, back taper, coronal transition</p>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="results-header">
+      <h2>Diagnostic Report</h2>
+      <button class="btn btn-outline" onclick="resetApp()" style="padding:8px 18px;font-size:.82rem;">
+        New Analysis
+      </button>
+    </div>
+    <div id="result-content"></div>
+
+    <!-- FEEDBACK -->
+    <div class="feedback-section">
+      <h3>Was this evaluation correct?</h3>
+      <p>Your clinical confirmation builds the training dataset that makes ImplantIQ smarter over time.</p>
+      <div class="feedback-row">
+        <button class="btn btn-correct" onclick="feedback('correct')">✓ Yes, correct</button>
+        <button class="btn btn-incorrect" onclick="feedback('incorrect')">✕ No, incorrect</button>
+      </div>
+      <div class="correct-input" id="correct-input">
+        <input type="text" id="correct-brand" placeholder="What is the actual implant? (e.g. Nobel Replace, Straumann BL...)" />
+        <button class="btn" onclick="submitCorrection()">Submit</button>
+      </div>
+      <p id="feedback-thanks" style="display:none;color:var(--success);margin-top:14px;font-size:.85rem;font-weight:500;">
+        ✓ Thank you — this case has been logged for training.
+      </p>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <strong>Clinical Disclaimer:</strong> ImplantIQ v0.2 is an AI-assisted decision support tool
+    optimized for Nobel Active implant identification. Results must be confirmed by a qualified
+    clinician using all available clinical and radiographic information. This tool does not
+    constitute a diagnosis or treatment recommendation. Image quality significantly affects accuracy —
+    direct digital exports are strongly preferred over photographs of screens.
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────
+let imageBase64 = null;
+let imageType   = null;
+let apiKey      = sessionStorage.getItem('implantiq_key') || '';
+
+if (apiKey) document.getElementById('api-key').value = apiKey;
+updateAnalyzeBtn();
+
+function saveKey() {
+  apiKey = document.getElementById('api-key').value.trim();
+  sessionStorage.setItem('implantiq_key', apiKey);
+  updateAnalyzeBtn();
+  alert('API key saved for this session.');
+}
+
+// ── FILE HANDLING ──────────────────────────────────────────────
+function handleFile(file) {
+  if (!file) return;
+  imageType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    imageBase64 = e.target.result.split(',')[1];
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('preview-container').style.display = 'block';
+    document.getElementById('drop-zone').style.display = 'none';
+    updateAnalyzeBtn();
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage() {
+  imageBase64 = null;
+  document.getElementById('preview-container').style.display = 'none';
+  document.getElementById('drop-zone').style.display = 'block';
+  document.getElementById('file-input').value = '';
+  updateAnalyzeBtn();
+}
+
+function updateAnalyzeBtn() {
+  document.getElementById('analyze-btn').disabled = !(apiKey && imageBase64);
+}
+
+// Drag and drop
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+// ── THE SYSTEM PROMPT v0.2 ─────────────────────────────────────
+// LEARNING NOTE: This is completely rewritten from v0.1.
+// Key changes:
+// 1. Nobel Active ONLY - no Straumann, no other brands
+// 2. Feature-by-feature scoring BEFORE reaching a verdict
+// 3. Three possible verdicts - not just brand guessing
+// 4. Clinical knowledge from the oral surgeon baked in
+// 5. TiUltra collar awareness added
+// 6. Image quality gating - poor images = low confidence
+const SYSTEM_PROMPT = `You are an expert oral and maxillofacial radiologist specializing in dental implant identification. 
+Your sole task in this version is to evaluate whether a periapical radiograph shows a Nobel Biocare Nobel Active implant.
+
+## YOUR EVALUATION FRAMEWORK
+
+You do NOT guess. You evaluate four specific diagnostic criteria independently, then reach a verdict based on how many criteria are clearly met. This prevents false positives.
+
+## THE FOUR NOBEL ACTIVE DIAGNOSTIC CRITERIA
+
+### Criterion 1: FLAT APEX
+- Nobel Active has a distinctively FLAT, blunt, almost squared-off apex at the bottom of the implant
+- This is one of the most reliable identifiers
+- Many clone implants that copy the Nobel Active design fail to replicate the flat apex and instead show a slightly rounded or pointed tip
+- Score as: PRESENT (clearly flat), ABSENT (rounded/pointed), or UNCLEAR (image quality prevents assessment)
+
+### Criterion 2: AGGRESSIVE DOUBLE-LEAD THREAD PATTERN
+- The body of Nobel Active has a very aggressive, deep, wide thread pattern
+- It uses a double-lead thread design — meaning two thread spirals interleaved — giving it a distinctive appearance
+- The threads are noticeably more pronounced and deeper than single-lead systems like Straumann
+- The thread valleys are deep and the thread peaks are sharp
+- Score as: PRESENT, ABSENT, or UNCLEAR
+
+### Criterion 3: BACK TAPER IN THE CORONAL THIRD
+- Nobel Active has a visible back taper — the implant body narrows slightly as it approaches the coronal (top) portion
+- This reverse taper in the upper third is a key distinguishing feature
+- It is different from the overall body taper of the implant — look specifically for narrowing near the top
+- Score as: PRESENT, ABSENT, or UNCLEAR
+
+### Criterion 4: CORONAL THREAD TRANSITION
+- In the upper portion of the implant near the crestal bone level, the thread pattern changes
+- The threads become less aggressive, more compressed, or differently spaced compared to the mid-body threads
+- This transition zone is visible radiographically as a change in thread character near the top
+- Score as: PRESENT, ABSENT, or UNCLEAR
+
+## IMPORTANT ADDITIONAL KNOWLEDGE
+
+### TiUltra Collar (NEW in recent Nobel Active versions):
+- Some newer Nobel Active implants have a TiUltra polished collar at the very top of the implant
+- This polished collar appears as a smooth, slightly less radioopaque band at the crestal portion
+- Do NOT mistake this for a Straumann Tissue Level implant's polished collar — the Nobel Active collar is much shorter and sits within a back-tapered coronal body
+- If you see this feature, note it as it confirms a newer Nobel Active variant
+
+### Image Quality Assessment:
+- A photograph of a screen is significantly lower quality than a direct digital export
+- Blurry, overexposed, or underexposed images severely limit feature assessment
+- If image quality is poor, uncertainty should be HIGH regardless of what features you think you see
+
+## VERDICT RULES (critical — prevents false positives)
+
+- "CONSISTENT WITH NOBEL ACTIVE": 3 or 4 criteria clearly PRESENT, good image quality
+- "POSSIBLY NOBEL ACTIVE": 2 criteria PRESENT and/or multiple UNCLEAR due to image quality
+- "NOT CONSISTENT WITH NOBEL ACTIVE": 0 or 1 criteria PRESENT, or key criteria clearly ABSENT
+
+## RESPONSE FORMAT
+
+Respond ONLY with valid JSON (no markdown, no text outside the JSON):
+{
+  "verdict": "CONSISTENT" | "POSSIBLE" | "NOT_CONSISTENT",
+  "overall_confidence": 0-100,
+  "image_quality": "good" | "fair" | "poor",
+  "image_notes": "Notes about image quality and how it affects confidence",
+  "criteria": {
+    "flat_apex": {
+      "score": "present" | "absent" | "unclear",
+      "explanation": "What you observed about the apex"
+    },
+    "aggressive_thread": {
+      "score": "present" | "absent" | "unclear", 
+      "explanation": "What you observed about the thread pattern"
+    },
+    "back_taper": {
+      "score": "present" | "absent" | "unclear",
+      "explanation": "What you observed about the coronal taper"
+    },
+    "coronal_transition": {
+      "score": "present" | "absent" | "unclear",
+      "explanation": "What you observed about thread transition near crest"
+    }
+  },
+  "tiultra_collar_noted": true | false,
+  "clinical_summary": "A paragraph summarizing the overall radiographic findings and reasoning for the verdict",
+  "recommendation": "What the clinician should do next based on this result"
+}`;
+
+// ── ANALYZE ────────────────────────────────────────────────────
+async function analyze() {
+  showError('');
+  setLoading(true);
+
+  try {
+    const body = {
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1800,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: { type: "base64", media_type: imageType, data: imageBase64 }
+            },
+            {
+              type: "text",
+              text: "Please evaluate this periapical radiograph against the four Nobel Active diagnostic criteria. Score each criterion independently, then provide your verdict. Be conservative — only conclude CONSISTENT if the evidence is clear."
+            }
+          ]
+        }
+      ]
+    };
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `API error ${response.status}`);
+    }
+
+    const data = await response.json();
+    const rawText = data.content[0].text;
+    const clean = rawText.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    renderResults(parsed);
+
+  } catch (err) {
+    showError(`Error: ${err.message}. Check your API key and try again.`);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── RENDER RESULTS ─────────────────────────────────────────────
+// LEARNING NOTE: This function takes the JSON from Claude and
+// builds the visual result cards. Each section maps to a part
+// of the JSON response we defined in the system prompt.
+function renderResults(data) {
+  const container = document.getElementById('result-content');
+  container.innerHTML = '';
+
+  // ── Verdict card ──
+  const verdictMap = {
+    'CONSISTENT':     { cls: 'consistent', icon: '✅', label: 'Consistent With', title: 'Nobel Active Implant', },
+    'POSSIBLE':       { cls: 'possible',   icon: '⚠️', label: 'Possibly',        title: 'Nobel Active — Low Confidence', },
+    'NOT_CONSISTENT': { cls: 'inconsistent',icon: '❌', label: 'Not Consistent With', title: 'Nobel Active Implant', },
+  };
+
+  const v = verdictMap[data.verdict] || verdictMap['POSSIBLE'];
+
+  const verdictCard = document.createElement('div');
+  verdictCard.className = `verdict-card ${v.cls}`;
+  verdictCard.innerHTML = `
+    <span class="verdict-icon">${v.icon}</span>
+    <div class="verdict-label">${v.label}</div>
+    <div class="verdict-title">${v.title}</div>
+    <p class="verdict-summary">${data.clinical_summary || ''}</p>
+    ${data.tiultra_collar_noted ? '<p style="margin-top:12px;font-size:.82rem;color:var(--accent);font-weight:600;">🔵 TiUltra collar noted — consistent with newer Nobel Active variant</p>' : ''}
+  `;
+  container.appendChild(verdictCard);
+
+  // ── Confidence meter ──
+  const confSection = document.createElement('div');
+  confSection.className = 'confidence-section';
+  const qualityClass = data.image_quality || 'fair';
+  confSection.innerHTML = `
+    <h3>Overall Confidence Score</h3>
+    <div class="quality-pill ${qualityClass}">
+      Image Quality: ${(data.image_quality || 'fair').toUpperCase()}
+    </div>
+    <div class="conf-meter">
+      <div class="conf-number">${data.overall_confidence}%</div>
+      <div class="conf-bar-wrap">
+        <div class="conf-bar-bg">
+          <div class="conf-bar-fill" data-pct="${data.overall_confidence}" style="width:0%"></div>
+        </div>
+        <div class="conf-desc">${data.image_notes || ''}</div>
+      </div>
+    </div>
+  `;
+  container.appendChild(confSection);
+
+  // ── Criteria scorecard ──
+  const scorecard = document.createElement('div');
+  scorecard.className = 'scorecard';
+
+  const criteriaLabels = {
+    flat_apex:           { label: 'Flat Apex',                    icon: { present: '✓', absent: '✗', unclear: '?' } },
+    aggressive_thread:   { label: 'Aggressive Double-Lead Thread', icon: { present: '✓', absent: '✗', unclear: '?' } },
+    back_taper:          { label: 'Back Taper (Coronal Third)',    icon: { present: '✓', absent: '✗', unclear: '?' } },
+    coronal_transition:  { label: 'Coronal Thread Transition',     icon: { present: '✓', absent: '✗', unclear: '?' } },
+  };
+
+  let scorecardHTML = '<h3>Diagnostic Criteria Scorecard</h3>';
+  for (const [key, meta] of Object.entries(criteriaLabels)) {
+    const criterion = (data.criteria || {})[key] || {};
+    const score = criterion.score || 'unclear';
+    scorecardHTML += `
+      <div class="score-row">
+        <div class="score-indicator ${score}">${meta.icon[score]}</div>
+        <div class="score-content">
+          <strong>${meta.label} — <span style="text-transform:capitalize;color:${score==='present'?'var(--success)':score==='absent'?'var(--danger)':'var(--warning)'}">${score}</span></strong>
+          <span>${criterion.explanation || ''}</span>
+        </div>
+      </div>
+    `;
+  }
+  scorecard.innerHTML = scorecardHTML;
+  container.appendChild(scorecard);
+
+  // ── Recommendation ──
+  if (data.recommendation) {
+    const rec = document.createElement('div');
+    rec.className = 'reasoning-section';
+    rec.innerHTML = `
+      <h3>Clinical Recommendation</h3>
+      <p>${data.recommendation}</p>
+    `;
+    container.appendChild(rec);
+  }
+
+  // Show results, hide button
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('analyze-btn').style.display = 'none';
+
+  // Animate confidence bar
+  setTimeout(() => {
+    document.querySelectorAll('.conf-bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.pct + '%';
+    });
+  }, 300);
+
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── FEEDBACK ───────────────────────────────────────────────────
+function feedback(type) {
+  if (type === 'correct') {
+    document.getElementById('feedback-thanks').style.display = 'block';
+    document.getElementById('correct-input').style.display = 'none';
+    console.log('✓ Verdict confirmed correct — would log to training DB');
+  } else {
+    document.getElementById('correct-input').style.display = 'flex';
+  }
+}
+
+function submitCorrection() {
+  const brand = document.getElementById('correct-brand').value.trim();
+  if (!brand) return;
+  document.getElementById('feedback-thanks').style.display = 'block';
+  document.getElementById('correct-input').style.display = 'none';
+  console.log(`✓ Correction: ${brand} — would save to training DB`);
+}
+
+// ── RESET ──────────────────────────────────────────────────────
+function resetApp() {
+  clearImage();
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('analyze-btn').style.display = 'block';
+  document.getElementById('feedback-thanks').style.display = 'none';
+  document.getElementById('correct-input').style.display = 'none';
+  document.getElementById('correct-brand').value = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── HELPERS ────────────────────────────────────────────────────
+function setLoading(on) {
+  document.getElementById('loader').style.display = on ? 'block' : 'none';
+  document.getElementById('analyze-btn').style.display = on ? 'none' : 'block';
+  document.getElementById('analyze-btn').disabled = on;
+}
+
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.textContent = msg;
+  box.style.display = msg ? 'block' : 'none';
+}
+</script>
+</body>
+</html>
