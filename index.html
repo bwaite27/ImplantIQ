@@ -193,9 +193,9 @@
   <!-- THREE REFERENCE LIBRARIES -->
   <div class="ref-libraries">
     <span class="ref-lib-label">Reference Libraries:</span>
-    <span class="ref-pill nobel">🟤 Nobel Active · 7 cases</span>
+    <span class="ref-pill nobel">🟤 Nobel Active · 10 cases</span>
     <span class="ref-pill tl">🔵 Straumann TL · 5 cases</span>
-    <span class="ref-pill blt">🟢 Straumann BLT · 6 cases</span>
+    <span class="ref-pill blt">🟢 Straumann BLT · 8 cases</span>
   </div>
 
   <!-- API KEY -->
@@ -206,6 +206,16 @@
       <button class="btn" onclick="saveKey()">Save Key</button>
     </div>
     <p class="api-note">Stored in your browser session only. <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></p>
+  </div>
+
+  <!-- CONTRIBUTOR -->
+  <div class="api-section">
+    <div class="section-label">👤 Contributor Name</div>
+    <div class="api-row">
+      <input type="text" id="contributor-name" placeholder="e.g. Dr. Waite"/>
+      <button class="btn" onclick="saveContributor()">Save</button>
+    </div>
+    <p class="api-note">Tags every case in this session so exported records show who submitted it.</p>
   </div>
 
   <!-- UPLOAD -->
@@ -279,7 +289,10 @@
 
   <!-- SESSION HISTORY -->
   <div class="history-section">
-    <h3>📋 Session History</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <h3 style="margin-bottom:0">📋 Session History</h3>
+      <button class="btn btn-outline" id="export-csv-btn" onclick="exportSessionCSV()" style="padding:7px 14px;font-size:.78rem" disabled>⬇ Export Session as CSV</button>
+    </div>
     <div id="history-list"><p class="empty-history">No cases analyzed yet this session.</p></div>
   </div>
 
@@ -618,7 +631,7 @@ async function analyze() {
         "anthropic-dangerous-direct-browser-access": "true"
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-6",
         max_tokens: 2500,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content }]
@@ -746,35 +759,98 @@ function logToHistory(data) {
   };
   sessionLog.unshift({
     time: new Date().toLocaleTimeString(),
+    date: new Date().toLocaleDateString(),
     label: labelMap[data.verdict] || data.verdict,
     cls: clsMap[data.verdict] || "no-match",
     confidence: data.overall_confidence,
     quality: data.image_quality,
-    abutment: data.healing_abutment_detected
+    abutment: data.healing_abutment_detected,
+    rawData: data,
+    correct: null,
+    actualImplant: ""
   });
+  renderHistory();
+  updateExportBtn();
+}
+
+function renderHistory() {
   document.getElementById("history-list").innerHTML = sessionLog.map(e =>
     `<div class="history-row">
       <span class="history-verdict ${e.cls}">${e.label}</span>
-      <span style="color:var(--muted);font-size:.75rem">${e.confidence}% · ${e.quality||"—"} quality${e.abutment?" · abutment detected":""}</span>
+      <span style="color:var(--muted);font-size:.75rem">${e.confidence}% · ${e.quality||"—"} quality${e.abutment?" · abutment detected":""}${e.correct==="Y"?" · ✓ confirmed":e.correct==="N"?" · ✕ corrected":""}</span>
       <span class="history-time">${e.time}</span>
     </div>`
-  ).join("");
+  ).join("") || '<p class="empty-history">No cases analyzed yet this session.</p>';
+}
+
+function updateExportBtn() {
+  const btn = document.getElementById("export-csv-btn");
+  if (btn) btn.disabled = sessionLog.length === 0;
+}
+
+function saveContributor() {
+  const name = document.getElementById("contributor-name").value.trim();
+  sessionStorage.setItem("ig_contributor", name);
+  alert("Contributor name saved for this session.");
 }
 
 function feedback(type) {
+  if (sessionLog.length === 0) return;
   if (type === "correct") {
+    sessionLog[0].correct = "Y";
     document.getElementById("feedback-thanks").style.display = "block";
     document.getElementById("correct-input").style.display = "none";
+    renderHistory();
   } else {
     document.getElementById("correct-input").style.display = "flex";
   }
 }
 function submitCorrection() {
   const brand = document.getElementById("correct-brand").value.trim();
-  if (!brand) return;
+  if (!brand || sessionLog.length === 0) return;
+  sessionLog[0].correct = "N";
+  sessionLog[0].actualImplant = brand;
   document.getElementById("feedback-thanks").style.display = "block";
   document.getElementById("correct-input").style.display = "none";
-  console.log("Correction:", brand);
+  renderHistory();
+}
+
+function csvEscape(val) {
+  if (val === null || val === undefined) return "";
+  const s = String(val).replace(/"/g, '""');
+  return /[",\n]/.test(s) ? `"${s}"` : s;
+}
+
+function exportSessionCSV() {
+  if (sessionLog.length === 0) { alert("No cases to export yet."); return; }
+  const contributor = document.getElementById("contributor-name").value.trim() || sessionStorage.getItem("ig_contributor") || "";
+  const headers = ["#","Date","Image File","App Version","Contributor","Verdict","Confidence","Image Quality","Flat Apex","Thread Pattern","Coronal Trans.","TiUltra Collar","Correct? Y/N","Actual Implant","Drive Link","Notes"];
+  const rows = [headers.map(csvEscape).join(",")];
+  const ordered = [...sessionLog].reverse(); // oldest first, matches natural case numbering
+  ordered.forEach((e, i) => {
+    const nc = e.rawData.nobel_criteria || {};
+    const flatApex = nc.flat_apex ? nc.flat_apex.score : "";
+    const threadPattern = nc.double_lead_thread ? nc.double_lead_thread.score : "";
+    const coronalTrans = nc.continuous_taper ? nc.continuous_taper.score : "";
+    const row = [
+      i + 1, e.date, "", "v0.7", contributor, e.label, e.confidence + "%", e.quality || "",
+      flatApex, threadPattern, coronalTrans,
+      e.rawData.tiultra_collar_noted ? "yes" : "",
+      e.correct || "", e.actualImplant || "", "",
+      e.rawData.clinical_summary ? e.rawData.clinical_summary.slice(0, 150) : ""
+    ];
+    rows.push(row.map(csvEscape).join(","));
+  });
+  const csv = rows.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ImplantGenius_Session_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function resetApp() {
